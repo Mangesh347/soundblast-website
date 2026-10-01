@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout — XCoda Pro</title>
+  <meta name="description" content="Choose XCoda Pro Monthly, Yearly, or Lifetime and pay securely with PayPal or Razorpay." />
+  <link rel="stylesheet" href="checkout.css" />
+  <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
+</head>
+<body class="ck-body">
+  <div class="ck-shell" id="checkoutShell">
+    <aside class="ck-left" aria-label="Order summary">
+      <a class="ck-back" href="/">Home</a>
+      <div class="ck-brand">
+        <img class="ck-brand-logo-mark" src="icons/icon48.png" width="36" height="36" alt="">
+        XCoda
+      </div>
+      <p class="ck-kicker">You’re one step from Pro</p>
+      <p class="ck-price-hero" id="heroPrice">$15.33 per year</p>
+
+      <div class="ck-test on ck-trust" id="testBanner">
+        Secure payment. See your final total before you pay.
+      </div>
+
+      <div class="ck-currency" role="group" aria-label="Currency">
+        <button type="button" class="active" data-currency="USD" id="curUSD">USD</button>
+        <button type="button" data-currency="INR" id="curINR">INR</button>
+      </div>
+
+      <div class="ck-plan-pills" role="tablist" aria-label="Billing cycle">
+        <button type="button" data-cycle="monthly" data-label-usd="Monthly · $1.99" data-label-inr="Monthly · ₹190">Monthly · $1.99</button>
+        <button type="button" class="active" data-cycle="yearly" data-label-usd="Yearly · $12.99 · Best value" data-label-inr="Yearly · ₹1,236 · Best value">Yearly · $12.99 · Best value</button>
+        <button type="button" data-cycle="lifetime" data-label-usd="Lifetime · $100" data-label-inr="Lifetime · ₹9,512">Lifetime · $100</button>
+      </div>
+
+      <div class="ck-product">
+        <div class="ck-product-top">
+          <img class="ck-product-ico" src="icons/icon48.png" width="52" height="52" alt="" />
+          <div style="flex:1">
+            <h2>XCoda Pro</h2>
+            <p>600% boost, every sound mode, Music Ad Block, and saved site settings.</p>
+          </div>
+          <div class="ck-product-price" id="productPrice">$12.99</div>
+        </div>
+        <div class="ck-annual">
+          <span id="annualHint">Save 46% with Yearly</span>
+          <label class="ck-switch" title="Toggle yearly">
+            <input type="checkbox" id="annualToggle" checked />
+            <span></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="ck-breakdown">
+        <div class="ck-row"><span>Subtotal</span><strong id="rowSubtotal">$12.99</strong></div>
+        <div class="ck-row"><span id="taxLabel">Tax (18%)</span><strong id="rowGst">$2.34</strong></div>
+        <div class="ck-row total"><span>Total due today</span><strong id="rowTotal">$15.33</strong></div>
+      </div>
+    </aside>
+
+    <main class="ck-right" aria-label="Payment">
+      <h1>Choose how to pay</h1>
+
+      <div class="ck-express">
+        <button type="button" class="ck-btn ck-btn-paypal" id="payPaypal" aria-label="Pay with PayPal">
+          <img class="ck-brand-logo ck-brand-logo-pp"
+            src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png"
+            width="100" height="26" alt="PayPal" decoding="async" />
+        </button>
+        <button type="button" class="ck-btn ck-btn-rzp" id="payRazorpay" aria-label="Pay with Razorpay">
+          <img class="ck-brand-logo ck-brand-logo-rzp"
+            src="assets/razorpay-logo.svg" width="120" height="26" alt="Razorpay" decoding="async" />
+        </button>
+      </div>
+
+      <div class="ck-or">or use card / UPI</div>
+
+      <label class="ck-label" for="buyerEmail">Billing email</label>
+      <input class="ck-input" id="buyerEmail" type="email" autocomplete="email"
+        placeholder="Your XCoda email" required />
+
+      <label class="ck-label">Card or UPI (Razorpay)</label>
+      <div class="ck-card-box">
+        <img class="ck-brand-logo ck-brand-logo-rzp" src="assets/razorpay-logo.svg" width="100" height="22" alt="Razorpay" decoding="async" />
+        <div>
+          <strong>Pay safely with Razorpay</strong><br />
+          Your card details stay private.
+        </div>
+      </div>
+
+      <button type="button" class="ck-btn ck-btn-dark" id="payCard">Pay with card / UPI</button>
+      <p class="ck-status" id="statusMsg" role="status"></p>
+      <p class="ck-legal">
+        By paying, you authorize Fenwick Labs to charge the total shown.
+        Buying Monthly or Yearly again adds more time. Lifetime stays yours forever.
+        Use your XCoda email so Pro reaches the right account.
+        <a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a> · <a href="refund.html">Refunds</a>
+      </p>
+      <div class="ck-powered">
+        <span>Secured by</span>
+        <img src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png" width="70" height="18" alt="PayPal" decoding="async" />
+        <img src="assets/razorpay-logo.svg" width="90" height="18" alt="Razorpay" decoding="async" />
+        <a href="support.html">Support</a>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const GST = 0.18;
+    let INR_USD_RATE = 95.12;
+    const USD = { monthly: 1.99, yearly: 12.99, lifetime: 100 };
+    let cycle = "yearly";
+    let currency = "USD";
+
+    const params = new URLSearchParams(location.search);
+    if (["monthly", "yearly", "lifetime"].includes(params.get("cycle"))) cycle = params.get("cycle");
+    if ((params.get("email") || "").includes("@")) {
+      document.getElementById("buyerEmail").value = params.get("email");
+    }
+
+    function money(n, cur) {
+      return new Intl.NumberFormat(cur === "INR" ? "en-IN" : "en-US", {
+        style: "currency", currency: cur, maximumFractionDigits: 2
+      }).format(n);
+    }
+    function label() {
+      return cycle === "monthly" ? "per month" : cycle === "yearly" ? "per year" : "one-time";
+    }
+    function quote() {
+      const sub = USD[cycle];
+      if (currency === "INR") {
+        const subInr = Math.round(sub * INR_USD_RATE * 100) / 100;
+        const gst = Math.round(subInr * GST * 100) / 100;
+        return { subtotal: subInr, gst, total: Math.round((subInr + gst) * 100) / 100, period: label() };
+      }
+      const gst = Math.round(sub * GST * 100) / 100;
+      return { subtotal: sub, gst, total: Math.round((sub + gst) * 100) / 100, period: label() };
+    }
+    function updatePlanPillLabels() {
+      document.querySelectorAll("[data-cycle]").forEach((b) => {
+        const key = currency === "INR" ? "labelInr" : "labelUsd";
+        const attr = currency === "INR" ? "data-label-inr" : "data-label-usd";
+        if (b.getAttribute(attr)) b.textContent = b.getAttribute(attr);
+      });
+    }
+    function render() {
+      const q = quote();
+      document.getElementById("heroPrice").textContent = `${money(q.total, currency)} ${q.period}`;
+      document.getElementById("productPrice").textContent = money(q.subtotal, currency);
+      document.getElementById("rowSubtotal").textContent = money(q.subtotal, currency);
+      document.getElementById("rowGst").textContent = money(q.gst, currency);
+      document.getElementById("rowTotal").textContent = money(q.total, currency);
+      document.getElementById("annualToggle").checked = cycle === "yearly";
+      document.querySelectorAll("[data-cycle]").forEach((b) => b.classList.toggle("active", b.dataset.cycle === cycle));
+      document.getElementById("curUSD").classList.toggle("active", currency === "USD");
+      document.getElementById("curINR").classList.toggle("active", currency === "INR");
+      updatePlanPillLabels();
+      document.getElementById("annualHint").textContent =
+        cycle === "yearly" ? "Save 46% with Yearly" :
+        cycle === "lifetime" ? "Pay once. Keep Pro forever." :
+        "Pro, month to month";
+    }
+    function setStatus(msg, kind) {
+      const el = document.getElementById("statusMsg");
+      el.textContent = msg || "";
+      el.className = "ck-status" + (kind ? " " + kind : "");
+    }
+    function requireEmail() {
+      const e = (document.getElementById("buyerEmail").value || "").trim().toLowerCase();
+      if (!e || !e.includes("@")) {
+        setStatus("Enter your XCoda email.", "error");
+        document.getElementById("buyerEmail").focus();
+        return null;
+      }
+      return e;
+    }
+    function escapeHtml(s) {
+      return String(s || "").replace(/[&<>"']/g, (c) =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
+      );
+    }
+    function customerPaymentError(message, fallback) {
+      const text = String(message || "");
+      if (/supabase|service role|schema|database|environment variable|not configured/i.test(text)) {
+        return "We need a hand finishing this payment. Keep your receipt and contact support@fenwicklabs.com.";
+      }
+      return text || fallback;
+    }
+
+    /** Unused on-page success — redirect to success.html instead. Kept for safety. */
+    function showSuccess(data) {
+      const email = (data.email || "").trim().toLowerCase();
+      sessionStorage.setItem("xcoda_payment_confirmation", JSON.stringify({
+        email,
+        cycle: data.cycle || cycle,
+        expiresAt: data.expiresAt || null,
+        reference: data.order_id || data.razorpay_payment_id || ""
+      }));
+      location.replace("/success.html?ok=1");
+    }
+
+    async function loadConfig() {
+      try {
+        const res = await fetch("/api/config");
+        const data = await res.json();
+        if (Number(data.inr_usd_rate) > 0) INR_USD_RATE = Number(data.inr_usd_rate);
+        const banner = document.getElementById("testBanner");
+        if (banner) {
+          banner.textContent = "Secure payment. See your final total before you pay.";
+        }
+      } catch (_) {}
+      render();
+    }
+
+    /** After provider verify succeeds → success page. Fail → stay / return to checkout. */
+    async function grantAfterVerify(path, body) {
+      const res = await fetch(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok || result.success === false || result.supabaseSaved === false) {
+        throw new Error(
+          customerPaymentError(
+            result.error,
+            "We couldn’t confirm your payment. Try again or contact XCoda support."
+          )
+        );
+      }
+      const email = (result.email || body.email || "").trim().toLowerCase();
+      try {
+        sessionStorage.setItem("xcoda_payment_confirmation", JSON.stringify({
+          email,
+          cycle: result.cycle || body.cycle || cycle,
+          expiresAt: result.expiresAt || null,
+          reference:
+            result.order_id ||
+            result.razorpay_payment_id ||
+            body.order_id ||
+            body.razorpay_payment_id ||
+            body.razorpay_order_id ||
+            ""
+        }));
+      } catch (_) {}
+      location.replace("/success.html?ok=1");
+    }
+
+    // Show error when redirected back from failed verification
+    (function showReturnError() {
+      const err = params.get("error");
+      let stored = "";
+      try { stored = sessionStorage.getItem("vb_pay_error") || ""; sessionStorage.removeItem("vb_pay_error"); } catch (_) {}
+      if (err || stored) {
+        setStatus(stored || "We couldn’t confirm that payment. Please try again.", "error");
+      }
+    })();
+
+
+    async function payPaypal() {
+      const e = requireEmail();
+      if (!e) return;
+      const btn = document.getElementById("payPaypal");
+      btn.disabled = true;
+      setStatus("Opening PayPal…");
+      try {
+        const res = await fetch("/api/paypal/create-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cycle, email: e, product: "volume_booster" })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(customerPaymentError(data.error, "PayPal didn’t open. Please try again."));
+        if (data.approve_url) {
+          sessionStorage.setItem("vb_pp_order", JSON.stringify({ order_id: data.order_id, email: e, cycle }));
+          location.href = data.approve_url;
+          return;
+        }
+        await grantAfterVerify("/api/paypal/capture-order", {
+          order_id: data.order_id || ("SIM_" + Date.now()),
+          email: e,
+          cycle
+        });
+      } catch (err) {
+        setStatus(err.message || String(err), "error");
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function payRazorpayCard() {
+      const e = requireEmail();
+      if (!e) return;
+      currency = "INR";
+      render();
+      setStatus("Opening card checkout…");
+      try {
+        const res = await fetch("/api/razorpay/create-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cycle, email: e, product: "volume_booster" })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(customerPaymentError(data.error, "Card checkout didn’t open. Please try again."));
+
+        if (data.mode === "simulated_preview" || !data.order_id || String(data.order_id).startsWith("SIM_")) {
+          await grantAfterVerify("/api/razorpay/verify-payment", {
+            razorpay_order_id: data.order_id || ("SIM_" + Date.now()),
+            razorpay_payment_id: "SIM_PAY_" + Date.now(),
+            razorpay_signature: "SIM",
+            email: e,
+            cycle
+          });
+          return;
+        }
+
+        if (typeof Razorpay === "undefined") {
+          throw new Error("Checkout didn’t load. Refresh and try again.");
+        }
+
+        const rzp = new Razorpay({
+          key: data.key_id,
+          amount: data.amount,
+          currency: data.currency || "INR",
+          name: "XCoda Pro",
+          description: `Pro ${cycle}`,
+          order_id: data.order_id,
+          prefill: { email: e },
+          theme: { color: "#111111" },
+          handler: async function (response) {
+            setStatus("Almost there…");
+            try {
+              await grantAfterVerify("/api/razorpay/verify-payment", {
+                ...response,
+                email: e,
+                cycle
+              });
+            } catch (err) {
+              setStatus(err.message || String(err), "error");
+            }
+          }
+        });
+        rzp.on("payment.failed", (resp) => {
+          setStatus(resp.error?.description || "Payment didn’t go through. Please try again.", "error");
+        });
+        rzp.open();
+        setStatus("");
+      } catch (err) {
+        setStatus(err.message || String(err), "error");
+      }
+    }
+
+    document.querySelectorAll("[data-cycle]").forEach((b) => b.addEventListener("click", () => {
+      cycle = b.dataset.cycle;
+      if (cycle !== "yearly") document.getElementById("annualToggle").checked = false;
+      render();
+    }));
+    document.getElementById("annualToggle").addEventListener("change", (e) => {
+      cycle = e.target.checked ? "yearly" : "monthly";
+      render();
+    });
+    document.getElementById("curUSD").addEventListener("click", () => { currency = "USD"; render(); });
+    document.getElementById("curINR").addEventListener("click", () => { currency = "INR"; render(); });
+    document.getElementById("payPaypal").addEventListener("click", payPaypal);
+    document.getElementById("payRazorpay").addEventListener("click", payRazorpayCard);
+    document.getElementById("payCard").addEventListener("click", payRazorpayCard);
+
+    (async function resumePayPal() {
+      const raw = sessionStorage.getItem("vb_pp_order") || sessionStorage.getItem("auralis_pp_order");
+      if (!raw || !params.get("token")) return;
+      try {
+        const saved = JSON.parse(raw);
+        setStatus("Getting Pro ready…");
+        await grantAfterVerify("/api/paypal/capture-order", {
+          order_id: saved.order_id || params.get("token"),
+          email: saved.email,
+          cycle: saved.cycle
+        });
+        sessionStorage.removeItem("vb_pp_order");
+        sessionStorage.removeItem("auralis_pp_order");
+      } catch (err) {
+        setStatus(err.message || String(err), "error");
+      }
+    })();
+
+    loadConfig();
+  </script>
+</body>
+</html>

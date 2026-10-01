@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to XCoda Pro</title>
+  <meta name="description" content="Your XCoda Pro purchase is confirmed. Open XCoda and start boosting." />
+  <meta name="theme-color" content="#0a0a0a" />
+  <link rel="icon" href="icons/icon48.png" />
+  <link rel="stylesheet" href="checkout.css" />
+</head>
+<body class="ck-body ck-success-page">
+  <header class="ck-success-header">
+    <a class="ck-success-brand" href="/" aria-label="XCoda home">
+      <img src="icons/icon48.png" width="44" height="44" alt="" />
+      <span>XCoda</span>
+    </a>
+    <span class="ck-success-secure">You’re in ✦</span>
+  </header>
+
+  <main class="ck-success-shell">
+    <div class="ck-success-glow" aria-hidden="true"></div>
+    <section class="ck-success-card" id="box" aria-live="polite" aria-busy="true">
+      <div class="ck-success-check" aria-hidden="true">
+        <span class="ck-success-loader">•••</span>
+      </div>
+      <p class="ck-success-kicker" id="kicker">One quick moment</p>
+      <h1 id="title" tabindex="-1">Unlocking your Pro sound</h1>
+      <p class="ck-success-lead" id="lead">We’re getting everything ready.</p>
+
+      <dl class="ck-success-receipt" id="receipt" hidden>
+        <div><dt>Account</dt><dd id="receiptEmail">—</dd></div>
+        <div><dt>Plan</dt><dd id="receiptPlan">XCoda Pro</dd></div>
+        <div id="accessRow"><dt>Access</dt><dd id="receiptAccess">Active</dd></div>
+        <div id="referenceRow" hidden><dt>Reference</dt><dd id="receiptReference">—</dd></div>
+      </dl>
+
+      <div class="ck-success-next" id="nextSteps" hidden>
+        <p class="ck-success-next-title">Turn up your first Pro tab</p>
+        <ol>
+          <li><span>1</span><div><strong>Open a tab</strong><small>Play something you love.</small></div></li>
+          <li><span>2</span><div><strong>Open XCoda</strong><small>Click the waveform in your toolbar.</small></div></li>
+          <li><span>3</span><div><strong>Feel the difference</strong><small>Turn it up and pick your sound.</small></div></li>
+        </ol>
+      </div>
+
+      <div class="ck-success-actions" id="actions" hidden>
+        <button type="button" class="ck-btn ck-btn-dark ck-success-cta" id="pingExt">
+          Open the Pro experience
+        </button>
+        <p class="ck-success-action-hint" id="actionHint">Then open XCoda from your toolbar.</p>
+        <a class="ck-success-home" href="/">Back home</a>
+      </div>
+    </section>
+
+    <p class="ck-success-help">
+      Need help? <a href="support.html">Contact support</a>
+      <span aria-hidden="true">·</span>
+      <a href="refund.html">Refund policy</a>
+    </p>
+  </main>
+
+  <script>
+    const EXT_ID = "khiccfmolhkliobmkflgbpefpgeajhpb";
+    let confirmation = null;
+    try {
+      confirmation = JSON.parse(sessionStorage.getItem("xcoda_payment_confirmation") || "null");
+    } catch (_) {}
+    const email = String(confirmation?.email || "").trim().toLowerCase();
+    const cycle = String(confirmation?.cycle || "");
+    const expiresAt = confirmation?.expiresAt || null;
+    const reference = String(confirmation?.reference || "");
+    const failBack = "/checkout.html?error=verify_failed" +
+      (cycle ? "&cycle=" + encodeURIComponent(cycle) : "");
+
+    function goFail(reason) {
+      try {
+        sessionStorage.setItem("vb_pay_error", reason || "Verification failed");
+      } catch (_) {}
+      location.replace(failBack);
+    }
+
+    // Never open chrome-extension:// URLs from the site — Chrome + ad blockers
+    // show ERR_BLOCKED_BY_CLIENT. Notify the extension via externally_connectable only.
+    function pingExtension() {
+      try {
+        if (chrome?.runtime?.sendMessage) {
+          chrome.runtime.sendMessage(EXT_ID, {
+            type: "XCODA_PAYMENT_VERIFIED"
+          }, () => void chrome.runtime.lastError);
+        }
+      } catch (_) {}
+    }
+
+    function showOk(data) {
+      const accountEmail = data.email || email;
+      const planNames = {
+        monthly: "XCoda Pro Monthly",
+        yearly: "XCoda Pro Yearly",
+        stacked: "XCoda Pro · Monthly + Yearly",
+        lifetime: "XCoda Pro Lifetime"
+      };
+      const accessText = data.expiresAt
+        ? "Through " + new Date(data.expiresAt).toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit"
+          })
+        : "Lifetime";
+
+      const box = document.getElementById("box");
+      box.setAttribute("aria-busy", "false");
+      box.querySelector(".ck-success-check").textContent = "✓";
+      document.getElementById("kicker").textContent = "Payment complete ✦";
+      document.getElementById("title").textContent = "Your sound just levelled up";
+      document.getElementById("lead").textContent =
+        "XCoda Pro is yours. Open a tab and hear the difference.";
+      document.getElementById("receiptEmail").textContent = accountEmail;
+      document.getElementById("receiptPlan").textContent =
+        planNames[data.cycle] || "XCoda Pro";
+      document.getElementById("receiptAccess").textContent = accessText;
+      if (reference) {
+        document.getElementById("receiptReference").textContent = reference;
+        document.getElementById("referenceRow").hidden = false;
+      }
+      document.getElementById("receipt").hidden = false;
+      document.getElementById("nextSteps").hidden = false;
+
+      const actions = document.getElementById("actions");
+      actions.hidden = false;
+      document.getElementById("pingExt").addEventListener("click", () => {
+        pingExtension();
+        const btn = document.getElementById("pingExt");
+        btn.textContent = "Pro is ready ✦";
+        btn.classList.add("is-ready");
+        document.getElementById("actionHint").textContent =
+          "Now open XCoda from your Chrome toolbar.";
+      });
+      document.getElementById("title").focus();
+
+      pingExtension();
+    }
+
+    if (!email.includes("@") || !["monthly", "yearly", "stacked", "lifetime"].includes(cycle)) {
+      goFail("Payment confirmation is missing. Return to checkout or contact support.");
+    } else {
+      showOk({ email, cycle, expiresAt });
+    }
+  </script>
+</body>
+</html>
